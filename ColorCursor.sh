@@ -14,14 +14,15 @@ check_dependencies() {
 
     if ! python3 -m ensurepip --version >/dev/null 2>&1; then
         echo "ensurepip is NOT available. Please check if python3.12-venv is installed."
-        exit 0
+        exit 1
     fi
 }
 
 setup_python_env() {
     python3 -m venv ~/.venvs/win2xcur-env > /dev/null 2>&1
     source ~/.venvs/win2xcur-env/bin/activate > /dev/null 2>&1
-    pip install win2xcur > /dev/null 2>&1
+    echo "Installing/checking win2xcur..."
+    pip install win2xcur
 }
 
 identify_directories() {

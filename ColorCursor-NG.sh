@@ -7,18 +7,21 @@ asset_source_directory="Miku"
 asset_destination_directory="Miku-L"
 source_zip_filename="ps-cur.zip"
 download_dir="${HOME}/Downloads"
+theme_dirname="" # Will be set by the user later
+
+files=(Alternate Busy Diagonal1 Diagonal2 Handwriting Help Horizontal Link Move Normal Person Pin Precision Text Unavailable Vertical Working)
 
 check_dependencies() {
     for cmd in pip python3 wget zip; do
         if ! command -v "$cmd" &> /dev/null; then
             echo "Error: $cmd is not available. Please install dependencies and try again."
-            exit 0
+            exit 1
         fi
     done
 
     if ! python3 -m ensurepip --version >/dev/null 2>&1; then
         echo "ensurepip is NOT available. Please check if python3.12-venv is installed."
-        exit 0
+        exit 1
     fi
 }
 
@@ -26,13 +29,16 @@ start() {
     cd "$download_dir" > /dev/null 2>&1
     echo -e "\nWelcome to ColorCursor-NG!\n"
 }
-
+start() {
+    echo -e "\nWelcome to ColorCursor-NG!\n"
+    cd "$download_dir" || { echo "Error: Could not change to download directory '$download_dir'."; exit 1; }
+}
 theme_download() {
     if wget "$theme_url" -O "$source_zip_filename" > /dev/null 2>&1; then
         echo -e "\nDownload successful!"
     else
         echo -e "\nDownload failed. Please check your internet connection"
-        exit 0
+        exit 1
     fi
 }
 
@@ -119,20 +125,19 @@ unzip_cursor() {
         echo -e "Extraction successful!\n"
     else
         echo -e "Extraction failed.\n"
-        exit 0
+        exit 1
     fi
 }
 
 setup_python_env() {
     python3 -m venv ~/.venvs/win2xcur-env > /dev/null 2>&1
     source ~/.venvs/win2xcur-env/bin/activate > /dev/null 2>&1
-    pip install win2xcur > /dev/null 2>&1
+    echo "Installing/checking win2xcur..."
+    pip install win2xcur
 }
 
 win_to_xcursor() {
     setup_python_env
-
-    files=(Alternate Busy Diagonal1 Diagonal2 Handwriting Help Horizontal Link Move Normal Person Pin Precision Text Unavailable Vertical Working)
 
     missing=0
     for f in "${files[@]}"; do

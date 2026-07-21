@@ -43,21 +43,54 @@ theme_download() {
 }
 
 cursor_choices() {
-    echo "Choose a cursor asset to download:"
-    echo "1) Miku: Virtual Singer"
-    echo "2) Miku: Leo/Need"
-    echo "3) Miku: MORE MORE JUMP!"
-    echo "4) Miku: Vivid BAD SQUAD"
-    echo "5) Miku: Wonderlands Showtime"
-    echo "6) Miku: Nightcord at 25:00"
-    echo -e "7) Exit\n"
+    echo "Choose a character cursor asset to download:"
+    echo "1) Miku"
+    echo "2) Rin"
+    echo "3) Len"
+    echo "4) MEIKO"
+    echo "5) KAITO"
+    echo "6) Ichika"
+    echo "7) Saki"
+    echo "8) Honami"
+    echo "9) Shiho"
+    echo "10) Minori"
+    echo "11) Haruka"
+    echo "12) Airi"
+    echo "13) Shizuku"
+    echo "14) Kohane"
+    echo "15) An"
+    echo "16) Akito"
+    echo "17) Toya"
+    echo "18) Tsukasa"
+    echo "19) Emu"
+    echo "20) Nene"
+    echo "21) Rui"
+    echo "22) Kanade"
+    echo "23) Mafuyu"
+    echo "24) Ena"
+    echo "25) Mizuki"
+    echo "26) Exit"
+
+    # echo -e "7) Exit\n"
 }
+
+miku_choices(){
+    echo "Choose a Miku cursor asset to download:"
+    echo "1) Virtual Singer"
+    echo "2) Leo/Need"
+    echo "3) MORE MORE JUMP!"
+    echo "4) Vivid BAD SQUAD"
+    echo "5) Wonderlands Showtime"
+    echo "6) Nightcord at 25:00"
+    echo "7) Exit"
+}
+
 
 download_cursors() {
     local cursor_format="$1"
     local cursor_type="$2"
 
-    local cursor_names=(
+    local mikucursor_names=(
         "VirtualSinger"
         "leoneed"
         "MMJ"
@@ -65,17 +98,65 @@ download_cursors() {
         "WxS"
         "N25"
     )
+    local othercursor_names=(
+        "Rin"
+        "Len"
+        "MEIKO"
+        "KAITO"
+        "Ichika"
+        "Saki"
+        "Honami"
+        "Shiho"
+        "Minori"
+        "Haruka"
+        "Airi"
+        "Shizuku"
+        "Kohane"
+        "An"
+        "Akito"
+        "Toya"
+        "Tsukasa"
+        "Emu"
+        "Nene"
+        "Rui"
+        "Kanade"
+        "Mafuyu"
+        "Ena"
+        "Mizuki"
+    )
 
     while true; do
         cursor_choices
+        
 
-        read -p "Please select an option (1-7): " choice
-
-        if ((choice >= 1 && choice <= ${#cursor_names[@]})); then
-            theme_url="${BASE_URL}/${cursor_format}%20file-${cursor_type}-${cursor_names[choice-1]}.zip"
+        read -p "Please select an option (1-26): " choice
+        if ((choice == 1)); then
+            miku_choices
+            read -p "Please select a Miku cursor asset to download: " miku_choice
+            if ((miku_choice == 7)); then
+                echo "Exiting..."
+                exit 0
+            fi
+            # Handle Miku unit selection
+            # '''
+            # https://www.colorfulstage.com/upload_images/media/Download/ani%20file-animation%20WxS.zip
+            # https://www.colorfulstage.com/upload_images/media/Download/cur%20file-static-N25.zip
+            # https://www.colorfulstage.com/upload_images/media/Download/Mizuki%20Animated%20Cursor.zip
+            # https://www.colorfulstage.com/upload_images/media/Download/Ena%20Static%20Cursor.zip
+            # '''
+            theme_url="${BASE_URL}/${cursor_format}%20file-${cursor_type}-${mikucursor_names[miku_choice-1]}.zip"
             theme_download
             break
-        elif ((choice == 7)); then
+        elif ((choice > 1 && choice <= ${#othercursor_names[@]}+1)); then #do other part
+            if [[ "$cursor_type" == "animation" ]]; then
+                cursor_type="Animated"
+            else
+                cursor_type="Static"
+            fi
+            theme_url="${BASE_URL}/${othercursor_names[choice-2]}%20${cursor_type}%20Cursor.zip"
+            theme_download
+            break
+        elif ((choice == 26)); then
             echo "Exiting..."
             exit 0
         else

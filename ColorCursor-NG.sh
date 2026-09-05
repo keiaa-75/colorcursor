@@ -136,6 +136,9 @@ download_cursors() {
             if ((miku_choice == 7)); then
                 echo "Exiting..."
                 exit 0
+            elif ((miku_choice < 1 || miku_choice > 6)); then
+                echo "Invalid selection. Try again."
+                continue
             fi
             # Handle Miku unit selection
             # '''
@@ -143,11 +146,22 @@ download_cursors() {
             # https://www.colorfulstage.com/upload_images/media/Download/cur%20file-static-N25.zip
             # https://www.colorfulstage.com/upload_images/media/Download/Mizuki%20Animated%20Cursor.zip
             # https://www.colorfulstage.com/upload_images/media/Download/Ena%20Static%20Cursor.zip
+            # dllm sbga https://www.colorfulstage.com/upload_images/media/Download/Ichika%20Cursor%20animation.zip ; https://www.colorfulstage.com/upload_images/media/Download/Minori%20Cursor%20animation.zip
             # '''
+            
             theme_url="${BASE_URL}/${cursor_format}%20file-${cursor_type}-${mikucursor_names[miku_choice-1]}.zip"
             theme_download
             break
         elif ((choice > 1 && choice <= ${#othercursor_names[@]}+1)); then #do other part
+            if ((choice == 6 || choice == 10 || choice == 14 || choice == 18 || choice == 22)); then
+                if [[ "$cursor_type" == "animation" ]]; then
+                    cursor_type="animation"
+                else
+                    cursor_type="static"
+                fi
+                # team captain use animation
+                # cursor_type="animation"
+            fi
             if [[ "$cursor_type" == "animation" ]]; then
                 cursor_type="Animated"
             else

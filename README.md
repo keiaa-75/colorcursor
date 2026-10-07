@@ -3,13 +3,13 @@
 > [!NOTE]
 > The converted output of this script are not used by Snap or Flatpak packages. You would have to package the theme on your own.
 
-A script to download and convert Windows cursor assets into Linux-compatible themes, specialized for downloading and converting **Project Sekai** cursor assets.
+A script to download and convert **Project Sekai** cursor assets into Linux-compatible themes.
 
 Special thanks to `safeusernameig`.
 
 ## Features
 
-- `ColorCursor-NG` downloads animated (`.ani`) or static (`.cur`) cursor assets straight from Colorful Stage.
+- `ColorCursor` downloads animated (`.ani`) or static (`.cur`) cursor assets straight from Colorful Stage.
 - Convert Windows cursor files to Linux-compatible formats.
 - Create a complete Linux cursor theme.
 - Optionally install the theme system-wide.
@@ -28,11 +28,11 @@ Make sure these dependencies are installed on your system before running the scr
 
 ## Usage
 
-`ColorCursor-NG` fetches the original assets from Colorful Stage. You may view them [here](https://colorfulstage.com/media/download/). You may download and run the script as follows.
+`ColorCursor` fetches the original assets from Colorful Stage. You may view them [here](https://colorfulstage.com/media/download/). You may download and run the script as follows.
 
 ```bash
-wget https://raw.githubusercontent.com/nozomi-75/ColorCursor/refs/heads/main/ColorCursor-NG.sh
-bash ColorCursor-NG.sh
+wget https://raw.githubusercontent.com/nozomi-75/ColorCursor/refs/heads/main/ColorCursor.sh
+bash ColorCursor.sh
 ```
 
 Do not feed the output directly to `bash`, as it may result in a never-ending loop due to conflicts with the `read` behavior in the script.
@@ -58,9 +58,6 @@ If you encounter any issues or mismatches, please file an issue or submit a pull
 
 ## Disclaimer
 
-> [!WARNING]
-> You are requested not to redistribute your converted assets.
+This repository does not provide or bundle any assets. `ColorCursor` downloads from the original source and converts them to usable format. This is deliberate to prevent any copyright infringement.
 
-This repository does not provide or bundle any assets. `ColorCursor-NG` downloads from the original source and converts them to usable format. This is deliberate to prevent any copyright infringement.
-
-HATSUNE MIKU: COLORFUL STAGE! is a copyrighted property of Colorful Palette Inc., Crypton Future Media INC, and SEGA CORPORATION. Reproduction or redistribution without permission from the copyright holder is prohibited.
+**HATSUNE MIKU: COLORFUL STAGE!** is a copyrighted property of **Colorful Palette Inc.**, **Crypton Future Media INC**, and **SEGA CORPORATION**. Reproduction or redistribution without permission from the copyright holder is prohibited.

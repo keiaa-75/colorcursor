@@ -8,6 +8,7 @@ asset_destination_directory="Miku-L"
 source_zip_filename="ps-cur.zip"
 download_dir="${HOME}/Downloads"
 theme_dirname="" # Will be set by the user later
+WORKDIR=""       # Temporary working directory, created in start()
 
 files=(Alternate Busy Diagonal1 Diagonal2 Handwriting Help Horizontal Link Move Normal Person Pin Precision Text Unavailable Vertical Working)
 
@@ -26,12 +27,11 @@ check_dependencies() {
 }
 
 start() {
-    cd "$download_dir" > /dev/null 2>&1
     echo -e "\nWelcome to ColorCursor-NG!\n"
-}
-start() {
-    echo -e "\nWelcome to ColorCursor-NG!\n"
-    cd "$download_dir" || { echo "Error: Could not change to download directory '$download_dir'."; exit 1; }
+    mkdir -p "$download_dir" || { echo "Error: Could not create '$download_dir'."; exit 1; }
+    # All intermediate files live here, so cleanup never touches the user's own folders.
+    WORKDIR=$(mktemp -d -t colorcursor.XXXXXX) || { echo "Error: Could not create a temporary directory."; exit 1; }
+    cd "$WORKDIR" || { echo "Error: Could not enter '$WORKDIR'."; exit 1; }
 }
 theme_download() {
     if wget "$theme_url" -O "$source_zip_filename" > /dev/null 2>&1; then
@@ -213,7 +213,7 @@ landing_selection() {
 }
 
 unzip_cursor() {
-    extraction_directory="$HOME/Downloads/$asset_source_directory"
+    extraction_directory="$WORKDIR/$asset_source_directory"
     mkdir -p "$extraction_directory"
 
     if unzip -o "$source_zip_filename" -d "$extraction_directory" > /dev/null 2>&1; then
@@ -301,8 +301,19 @@ clean_origin() {
 }
 
 theme_construct() {
-    read -p "Enter theme name: " theme_dirname
-    mv "$asset_destination_directory" "$theme_dirname"
+    while true; do
+        read -rp "Enter theme name: " theme_dirname
+        if [[ ! $theme_dirname =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "Use only letters, numbers, '.', '_' or '-' (must start with a letter or number)."
+        elif [[ -e "$download_dir/$theme_dirname" || -e "$download_dir/$theme_dirname.zip" ]]; then
+            echo "'$theme_dirname' (or '$theme_dirname.zip') already exists in $download_dir. Pick another name."
+        else
+            break
+        fi
+    done
+
+    mv -- "$asset_destination_directory" "$download_dir/$theme_dirname" || { echo "Error: Could not create the theme folder."; exit 1; }
+    cd "$download_dir" || exit 1
 
     cat > "$theme_dirname/cursor.theme" <<EOF
 [Icon Theme]
@@ -360,12 +371,16 @@ asset_process() {
 }
 
 cleanup() {
-    rm -rf "$asset_source_directory"
-    rm -rf "$theme_dirname"
-    rm -f "$source_zip_filename"
+    if [[ -n "$WORKDIR" && -d "$WORKDIR" ]]; then
+        rm -rf -- "$WORKDIR"
+    fi
 }
 
 main() {
+    trap cleanup EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+
     check_dependencies
     start
     landing_selection
@@ -373,7 +388,6 @@ main() {
     asset_process
     theme_zip
     theme_install
-    cleanup
 }
 
 main

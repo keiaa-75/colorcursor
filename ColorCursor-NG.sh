@@ -13,7 +13,7 @@ WORKDIR=""       # Temporary working directory, created in start()
 files=(Alternate Busy Diagonal1 Diagonal2 Handwriting Help Horizontal Link Move Normal Person Pin Precision Text Unavailable Vertical Working)
 
 check_dependencies() {
-    for cmd in pip python3 wget zip; do
+    for cmd in pip python3 wget zip unzip; do
         if ! command -v "$cmd" &> /dev/null; then
             echo "Error: $cmd is not available. Please install dependencies and try again."
             exit 1
@@ -33,13 +33,30 @@ start() {
     WORKDIR=$(mktemp -d -t colorcursor.XXXXXX) || { echo "Error: Could not create a temporary directory."; exit 1; }
     cd "$WORKDIR" || { echo "Error: Could not enter '$WORKDIR'."; exit 1; }
 }
+# Tries every URL in $theme_urls until one gives a valid zip.
 theme_download() {
-    if wget "$theme_url" -O "$source_zip_filename" > /dev/null 2>&1; then
-        echo -e "\nDownload successful!"
-    else
-        echo -e "\nDownload failed. Please check your internet connection"
-        exit 1
-    fi
+    local url rc
+    for url in "${theme_urls[@]}"; do
+        wget -q --tries=1 --timeout=20 -O "$source_zip_filename" "$url"
+        rc=$?
+        if ((rc == 0)); then
+            # Some servers answer 200 with an HTML page for missing files, so check it is really a zip.
+            if unzip -tq "$source_zip_filename" > /dev/null 2>&1; then
+                echo -e "\nDownload successful!"
+                return 0
+            fi
+        elif ((rc != 8)); then
+            rm -f "$source_zip_filename"
+            echo -e "\nDownload failed: could not reach the server (wget error $rc). Check your internet connection."
+            exit 1
+        fi
+        rm -f "$source_zip_filename"
+    done
+
+    echo -e "\nDownload failed: no valid file was found at any of these addresses:"
+    printf '  %s\n' "${theme_urls[@]}"
+    echo "Compare them with the real links on the Colorful Stage download page."
+    exit 1
 }
 
 cursor_choices() {
@@ -140,34 +157,23 @@ download_cursors() {
                 echo "Invalid selection. Try again."
                 continue
             fi
-            # Handle Miku unit selection
-            # '''
-            # https://www.colorfulstage.com/upload_images/media/Download/ani%20file-animation%20WxS.zip
-            # https://www.colorfulstage.com/upload_images/media/Download/cur%20file-static-N25.zip
-            # https://www.colorfulstage.com/upload_images/media/Download/Mizuki%20Animated%20Cursor.zip
-            # https://www.colorfulstage.com/upload_images/media/Download/Ena%20Static%20Cursor.zip
-            # dllm sbga https://www.colorfulstage.com/upload_images/media/Download/Ichika%20Cursor%20animation.zip ; https://www.colorfulstage.com/upload_images/media/Download/Minori%20Cursor%20animation.zip
-            # '''
             
-            theme_url="${BASE_URL}/${cursor_format}%20file-${cursor_type}-${mikucursor_names[miku_choice-1]}.zip"
+            local miku_unit="${mikucursor_names[miku_choice-1]}"
+            theme_urls=(
+                "${BASE_URL}/${cursor_format}%20file-${cursor_type}-${miku_unit}.zip"
+                "${BASE_URL}/${cursor_format}%20file-${cursor_type}%20${miku_unit}.zip"
+            )
             theme_download
             break
-        elif ((choice > 1 && choice <= ${#othercursor_names[@]}+1)); then #do other part
-            if ((choice == 6 || choice == 10 || choice == 14 || choice == 18 || choice == 22)); then
-                if [[ "$cursor_type" == "animation" ]]; then
-                    cursor_type="animation"
-                else
-                    cursor_type="static"
-                fi
-                # team captain use animation
-                # cursor_type="animation"
-            fi
-            if [[ "$cursor_type" == "animation" ]]; then
-                cursor_type="Animated"
-            else
-                cursor_type="Static"
-            fi
-            theme_url="${BASE_URL}/${othercursor_names[choice-2]}%20${cursor_type}%20Cursor.zip"
+        elif ((choice > 1 && choice <= ${#othercursor_names[@]}+1)); then
+            # Two naming schemes exist on the site; the "Cursor animation" one is used by
+            # Ichika, Minori and probably the other unit leaders (Kohane, Tsukasa, Kanade).
+            local name="${othercursor_names[choice-2]}" label="Static"
+            [[ "$cursor_type" == "animation" ]] && label="Animated"
+            theme_urls=(
+                "${BASE_URL}/${name}%20${label}%20Cursor.zip"
+                "${BASE_URL}/${name}%20Cursor%20${cursor_type}.zip"
+            )
             theme_download
             break
         elif ((choice == 26)); then

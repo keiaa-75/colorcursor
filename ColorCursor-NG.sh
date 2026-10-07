@@ -3,12 +3,12 @@
 
 # Important configuration variables
 BASE_URL="https://www.colorfulstage.com/upload_images/media/Download"
-asset_source_directory="Miku"
-asset_destination_directory="Miku-L"
+asset_source_directory="source"
+asset_destination_directory="theme-build"
 source_zip_filename="ps-cur.zip"
 download_dir="${HOME}/Downloads"
-theme_dirname="" # Will be set by the user later
-WORKDIR=""       # Temporary working directory, created in start()
+theme_dirname=""
+WORKDIR=""
 
 files=(Alternate Busy Diagonal1 Diagonal2 Handwriting Help Horizontal Link Move Normal Person Pin Precision Text Unavailable Vertical Working)
 
@@ -219,13 +219,46 @@ landing_selection() {
 }
 
 unzip_cursor() {
-    extraction_directory="$WORKDIR/$asset_source_directory"
+    extraction_directory="$WORKDIR/extracted"
     mkdir -p "$extraction_directory"
 
     if unzip -o "$source_zip_filename" -d "$extraction_directory" > /dev/null 2>&1; then
         echo -e "Extraction successful!\n"
     else
         echo -e "Extraction failed.\n"
+        exit 1
+    fi
+
+    collect_source_files "$extraction_directory"
+}
+
+# Character zips may not all share one layout (nested folders, different letter case),
+# so look for each required file anywhere inside the archive and copy it into a flat
+# folder under the exact name the converter expects.
+collect_source_files() {
+    local raw=$1 f matches missing=()
+    mkdir -p "$asset_source_directory"
+
+    for f in "${files[@]}"; do
+        mapfile -t matches < <(find "$raw" -type f -iname "$f.$source_format" | sort)
+        if ((${#matches[@]} == 0)); then
+            missing+=("$f.$source_format")
+            continue
+        fi
+        if ((${#matches[@]} > 1)); then
+            echo "Note: found ${#matches[@]} copies of $f.$source_format, using ${matches[0]#"$raw"/}"
+        fi
+        cp -- "${matches[0]}" "$asset_source_directory/$f.$source_format"
+    done
+
+    if ((${#missing[@]} > 0)); then
+        if ((${#missing[@]} == ${#files[@]})); then
+            echo -e "\nError: none of the ${#files[@]} required .$source_format files were found in the archive."
+        else
+            echo -e "\nError: the archive is missing ${#missing[@]} of ${#files[@]} required .$source_format files:"
+            printf '  %s\n' "${missing[@]}"
+        fi
+        echo "The archive contains $(find "$raw" -type f -iname '*.ani' | wc -l) .ani and $(find "$raw" -type f -iname '*.cur' | wc -l) .cur files."
         exit 1
     fi
 }
